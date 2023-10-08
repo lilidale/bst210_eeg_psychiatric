@@ -1,0 +1,117 @@
+```{r}
+library(tidyverse)
+library(forcats)
+library(GGally)
+library(cowplot)
+```
+
+```{r}
+eeg = read.csv("EEG.machinelearing_data_BRMH.csv")
+mood = eeg %>% filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+ab = eeg[, 1:122]
+eeg %>% head
+```
+
+```{r}
+eeg %>% 
+  mutate(label = ifelse(main.disorder == "Healthy control", 
+                        1, ifelse(main.disorder == "Mood disorder", 
+                                  2, 3))) %>% 
+  ggplot(aes(y = fct_infreq(main.disorder), fill = label)) +
+  geom_bar() +
+  labs(y = "Main Disorder", title = "Count of numbers of main disorder in the dataset") +
+  theme_bw() + 
+  theme(legend.position = "none")
+```
+
+
+```{r,fig.height=6,fig.width=6}
+eeg %>% 
+  ggplot(aes(y = fct_infreq(specific.disorder))) +
+  geom_bar() +
+  facet_wrap("main.disorder", scale = "free_y", nrow = 4) +
+  labs(y = "Specific Disorder", title = "Count of numbers of main disorder in the dataset") +
+  theme_bw()
+```
+
+```{r,fig.height=2,fig.width=6}
+sex.p = eeg %>% ggplot(aes(x = sex)) + geom_bar() + theme_bw()
+iq.p = eeg %>% ggplot(aes(x = IQ)) + geom_histogram() + theme_bw()
+edu.p = eeg %>% ggplot(aes(x = education)) + geom_histogram() + theme_bw()
+age.p = eeg %>% ggplot(aes(x = age)) + geom_histogram() + theme_bw()
+
+plot_grid(sex.p, iq.p, edu.p, age.p, nrow = 1)
+```
+
+```{r}
+mood %>% select(main.disorder, age, IQ, education, sex) %>% summary
+```
+
+```{r}
+mood %>% select(main.disorder, age, IQ, education, sex) %>% 
+  ggpairs
+```
+
+Now categorizing EEG signal:
+
+reference: https://www.kaggle.com/code/lazygene/visualising-pre-processed-eeg-data 
+
+columns to be in format: band.channel\
+reformat from XX.X.band.x.channel to band.channel
+
+AB: absolute power per band per channel (eg. AB.A.delta.a.FP1)
+COH: coherence
+
+We only look at AB here. 
+
+
+```{r}
+ab = eeg[, 1:122]
+colnames(ab)[9:122] = str_split(colnames(ab)[9:122], "\\.") %>% 
+  lapply(function(x){ paste0(x[3], "_", x[5])
+  }) %>% unlist
+ab.long = ab %>% pivot_longer(9:122) %>% 
+  separate(name, c("band", "chanel"), "_") %>% 
+  filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+ab.long %>% head
+```
+
+in each band: correlation between chanels?\
+in each chanel: correlation between bands?
+
+band (6): "delta" "theta" "alpha" "beta" "highbeta" "gamma" \
+chanel (19):  "FP1" "FP2" "F7"  "F3"  "Fz"  "F4"  "F8"  "T3"  "C3"  "Cz" "C4"  "T4"  "T5"  "P3"  "Pz"  "P4"  "T6"  "O1"  "O2"  
+
+```{r}
+d = ab.long %>% filter(band == "delta") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+t = ab.long %>% filter(band == "theta") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+a = ab.long %>% filter(band == "alpha") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+b = ab.long %>% filter(band == "beta") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+h = ab.long %>% filter(band == "highbeta") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+g = ab.long %>% filter(band == "gamma") %>% 
+  pivot_wider(names_from = chanel, values_from = value) %>% 
+  select(10:28) %>% ggcorr()
+
+plot_grid(d, t, a, b, h, g, nrow = 2,
+          labels = c("delta", "theta", "alpha", "beta", 
+                     "highbeta", "gamma"))
+```
+
+chanel (19):  "FP1" "FP2" "F7"  "F3"  "Fz"  "F4"  "F8"  "T3"  "C3"  "Cz" "C4"  "T4"  "T5"  "P3"  "Pz"  "P4"  "T6"  "O1"  "O2"  
+
+```{r}
+ab.long %>% filter(chanel == "F8") %>% 
+  pivot_wider(names_from = band, values_from = value) %>% 
+  select(10:15) %>% ggcorr()
+```
+
