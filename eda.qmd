@@ -10,6 +10,8 @@ eeg = read.csv("EEG.machinelearing_data_BRMH.csv")
 mood = eeg %>% filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
 ab = eeg[, 1:122]
 eeg %>% head
+nrow(eeg)
+nrow(mood)
 ```
 
 ```{r}
