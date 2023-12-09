@@ -247,6 +247,26 @@ plot(mod1, which = 4, id.n = 3)
 abline(h = 4/(nrow(dat)-2),col = "red")
 ```
 
+Sensitivity analysis:
+
+delete the three highest point, see if mod 1 coefficient changes significantly
+
+conclusion: the coefficients' confidence interval all overlaps, no significant change. worth to notice: the change in age is the most dramatic. and after removing the outliers, the association between beta band and disorder increases. 
+
+```{r}
+# Removing Outliers
+# influential row numbers
+cooksd <- cooks.distance(mod1)
+top_x_outlier <- 3
+influential <- as.numeric(names(sort(cooksd, 
+                                     decreasing = TRUE)[1:top_x_outlier]))
+mod1.noo = glm(main.disorder ~ age + I(age^2) + 
+                 education + IQ + log(beta),
+           family=binomial(),data=dat[-influential, ]) 
+mod1.noo %>% summary
+mod1 %>% summary
+```
+
 
 ```{r}
 AIC(basic)
