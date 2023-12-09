@@ -1,0 +1,403 @@
+```{r}
+library(tidyverse)
+library(forcats)
+library(GGally)
+library(cowplot)
+library(glmnet)
+library(broom)
+library(mgcv)
+library(pROC)
+library(nnet)
+library(vip)
+library(car)
+library(VGAM)
+library(caret)
+```
+
+Data Loading:
+
+mood: only mood disorder vs healthy control
+ab: only absolute power
+
+```{r}
+eeg = read.csv("EEG.machinelearing_data_BRMH.csv")
+mood = eeg %>% filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+ab = eeg[, 1:122]
+ab = eeg[, 1:122]
+colnames(ab)[9:122] = str_split(colnames(ab)[9:122], "\\.") %>% 
+  lapply(function(x){ paste0(x[3], "_", x[5])
+  }) %>% unlist
+ab.long = ab %>% pivot_longer(9:122) %>% 
+  separate(name, c("band", "chanel"), "_") %>% 
+  filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+mood.ab = ab %>% filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+mood.ab.long = ab.long %>% filter(main.disorder == "Healthy control" | main.disorder == "Mood disorder")
+```
+
+How many missing data?
+
+```{r}
+122-8
+15/945
+13/945
+ab[, 1:8] %>% summary
+
+glm(as.factor(main.disorder) ~ is.na(education), 
+    family=binomial, data=mood.ab) %>% summary
+
+glm(as.factor(main.disorder) ~ is.na(IQ), 
+    family=binomial, data=mood.ab) %>% summary
+
+glm(as.factor(sex) ~ is.na(IQ), 
+    family=binomial, data=mood.ab) %>% summary
+```
+
+Modeling:
+
+Let's do some lasso/ridge/en first. PCA will be later.
+
+dat here
+
+ATTENTION: collapsed band value to mean, can try other methods (threshold count, sum, etc) later if have time --> beta highest importance, not alpha, not the same as literature review
+
+try only fp1 chanel
+
+dat.more includes all the band and chanels.
+
+mood.disorder ~ 
+
+```{r}
+dat = mood.ab.long %>% 
+  mutate(band = as.factor(band), chanel = as.factor(chanel),
+         sex = ifelse(sex == "M", 1, 0)) %>% 
+  filter(chanel == "FP1") %>% #for now
+  select(-chanel) %>% 
+  filter(!is.na(IQ)) %>% 
+  filter(!is.na(education)) %>% 
+  group_by(no., band, sex, age, education, IQ, 
+           main.disorder, specific.disorder) %>% 
+  summarize(value = mean(value),
+            .groups = "drop") %>% 
+  pivot_wider(names_from = band, values_from = value) %>% 
+  mutate(main.disorder = ifelse(main.disorder == "Healthy control",
+                                0, 1)) %>% 
+  select(-no.)
+dat.y = dat$main.disorder
+dat.x = dat %>% select(-main.disorder) %>% 
+  select(-specific.disorder) # for now
+dat.more = mood.ab %>% 
+  filter(!is.na(IQ)) %>% 
+  filter(!is.na(education)) %>% 
+  mutate(main.disorder = ifelse(main.disorder == "Healthy control",
+                                0, 1)) %>% 
+  mutate(sex = ifelse(sex == "M", 1, 0))%>% 
+  select(-no.) %>% 
+  select(-eeg.date)
+dat.more.y = dat.more$main.disorder
+dat.more.x = dat.more %>% select(-main.disorder) %>% 
+  select(-specific.disorder) # for now
+```
+
+```{r}
+# Fit full logistic regression model
+full = glm(main.disorder ~ .-specific.disorder,
+           family=binomial(),data=dat) 
+full %>% summary
+```
+
+algorithm did not converge means linear separable.
+definitely no
+
+**need further investigation**
+lets pause for a while
+
+```{r}
+full.more = glm(main.disorder ~ .-specific.disorder,
+                family=binomial(),data=dat.more)
+```
+
+we will only try forward. because it overfits dramatically and does not converge on full data
+
+**not working, why**
+
+```{r}
+stepModel.s <- step(full.more, direction=c("forward"), trace=0)
+```
+
+LASSO on dat first
+
+coefficients achieved by best lambda via cross-validation
+
+```{r}
+set.seed(2)
+# LASSO
+lambda_grid <- .5^(-20:20)
+lasso.mod = glmnet(dat.x, dat.y,
+                   alpha=1,family="binomial",
+                   lambda = lambda_grid)
+vip(lasso.mod, num_features=10, geom="point")
+par(mfrow=c(1,2))
+plot(lasso.mod)
+cv.out <- cv.glmnet(as.matrix(dat.x), as.matrix(dat.y), alpha=1)
+cv.out
+plot(cv.out)
+coef(cv.out, s="lambda.min")
+
+# ridge
+ridge.mod = glmnet(dat.x, dat.y,
+                   alpha=0,family="binomial",
+                   lambda = lambda_grid)
+vip(ridge.mod, num_features=10, geom="point")
+par(mfrow=c(1,2))
+plot(ridge.mod)
+cv.out <- cv.glmnet(as.matrix(dat.x), as.matrix(dat.y), alpha=0)
+cv.out
+plot(cv.out)
+coef(cv.out, s="lambda.min")
+
+# EN
+en.mod = glmnet(dat.x, dat.y,
+                   alpha=0.5,family="binomial",
+                   lambda = lambda_grid)
+vip(en.mod, num_features=10, geom="point")
+par(mfrow=c(1,2))
+plot(en.mod)
+cv.out <- cv.glmnet(as.matrix(dat.x), as.matrix(dat.y), alpha=0.5)
+cv.out
+plot(cv.out)
+coef(cv.out, s="lambda.min")
+```
+
+```{r}
+vif(full)
+```
+
+```{r}
+lambda_grid <- .5^(-20:20)
+lasso.more.mod = glmnet(dat.more.x, dat.more.y,
+                   alpha=1,family="binomial",
+                   lambda = lambda_grid)
+vip(lasso.more.mod, num_features=10, geom="point")
+par(mfrow=c(1,2))
+plot(lasso.more.mod)
+cv.out <- cv.glmnet(as.matrix(dat.more.x), 
+                    as.matrix(dat.more.y), alpha=1)
+cv.out
+plot(cv.out)
+coef(cv.out, s="lambda.min")
+```
+
+
+Logistic regression:
+
+```{r,fig.height = 3,fig.width = 8}
+full = glm(main.disorder ~ .-specific.disorder,
+           family=binomial(),data=dat) 
+basic = glm(main.disorder ~ age + education +IQ + log(beta),
+            family=binomial(),data=dat) 
+full %>% summary
+basic %>% summary
+p <- predict(full, type = "response")
+pred <- ifelse(p > 0.5, "pos", "neg")
+dat.basic = dat %>% mutate(logit = log(p/(1-p)),
+                           pred = pred)
+# linearity assumption
+par(mfrow=c(1,4))
+plot(dat.basic$education, dat.basic$logit)
+plot(dat.basic$age, dat.basic$logit)
+plot(dat.basic$IQ, dat.basic$logit)
+plot(log(dat.basic$beta), dat.basic$logit)
+
+mod1 = glm(main.disorder ~ age + I(age^2) + education + IQ + log(beta),
+           family=binomial(),data=dat) 
+mod1 %>% summary
+
+# no need
+mod2 = gam(main.disorder ~ s(age) +education + IQ + log(beta),
+           family=binomial(),data=dat) 
+mod2 %>% summary
+AIC(mod2)
+
+anova(basic, mod1, mod2, test="Chisq")
+
+#up unitil now, choose mod1
+```
+
+```{r}
+# now try beta
+mod3 = glm(main.disorder ~ age  + I(age^2) + education + 
+             IQ + beta + I(beta^2),
+           family=binomial(),data=dat) 
+mod4 = gam(main.disorder ~ age  + I(age^2) + education + 
+             IQ + s(beta),
+           family=binomial(),data=dat) 
+
+anova(mod1, mod3, mod4, test = "Chisq")
+# no need still model 1 best
+
+mod5 = glm(main.disorder ~ age  + I(age^2) + education + 
+             IQ + beta,
+           family=binomial(),data=dat) 
+summary(mod5)
+```
+
+```{r}
+#di > 4/(n-2)
+plot(mod1, which = 4, id.n = 3)
+abline(h = 4/(nrow(dat)-2),col = "red")
+```
+
+
+```{r}
+AIC(basic)
+AIC(mod1)
+AIC(mod2)
+```
+
+In general, a c statistic of 0.7 is considered good while 0.8 is excellent, so the discrimination of this model is quite good.
+
+```{r}
+predprob <- predict(mod1,type=c("response")) 
+roccurve <- roc(dat.y ~ predprob) 
+plot(roccurve,col="red")
+auc(roccurve)
+```
+
+```{r}
+glm(main.disorder ~ sex,
+           family=binomial(),data=dat) 
+
+summary(mod1)
+```
+
+```{r}
+plot(dat$IQ, dat.y)
+exp(-0.204962)
+exp(-0.204962 - 0.092049*1.96)
+exp(-0.204962 + 0.092049*1.96)
+```
+
+Multinomial
+
+```{r}
+dat$specific.disorder = factor(dat$specific.disorder, 
+                               levels = c("Healthy control", 
+                                          "Depressive disorder", 
+                                          "Bipolar disorder"))
+multB <- nnet::multinom(specific.disorder ~ age + I(age^2) + 
+                          education + IQ + log(beta), data = dat)
+coef(multB)
+```
+
+```{r}
+summary(multB)
+```
+
+ordinal logistic regression
+
+
+```{r}
+multO = vglm(specific.disorder ~ age + I(age^2) + 
+                          education + IQ + log(beta),
+             cumulative(parallel=TRUE, reverse=TRUE), data=dat)
+summary(multO)
+```
+
+Because there is only 3 levels of outcome variable, the Generalized Ordinal Model is equivalent to the multinomial model.
+
+
+Checking the Proportional Odds Assumption: Via the Generalized Ordinal Model
+
+Using a likelihood ratio test, we have enough evidence to reject the null that the proportional odds assumption holds ($\chi^2$ = 74.18, df = 5, p < 0.001). 
+
+
+```{r}
+deviance(multO)
+deviance(multB)
+df.residual(multO)
+2*nrow(dat) - multB$edf
+
+
+deviance(multO)-deviance(multB)
+df.residual(multO)-698
+
+pchisq(deviance(multO)-deviance(multB),
+       df=df.residual(multO)-698,lower.tail=F)
+```
+
+Conclusion: use multinomial model multB
+
+the following is a try for roc, did not work should not use.
+
+```{r}
+predprob <- predict(multB, type=c("probs")) 
+roccurve <- multiclass.roc(dat$specific.disorder ~ predprob) 
+auc(roccurve)
+summary(roccurve)
+```
+
+prediction power check for model 1
+
+
+1: data splitting (20/80) for ROC check
+
+AUC measures how true positive rate (recall) and false positive rate trade off, so in that sense it is already measuring something else.
+
+poor accuracy, but high auc.
+
+check what does this mean
+
+```{r}
+mod1 = glm(main.disorder ~ age + I(age^2) + education + IQ + log(beta),
+           family=binomial(),data=dat) 
+
+set.seed(2010)
+index = sample(1:nrow(dat), size = floor(0.2*nrow(dat)))
+dat.train = dat[-index, ]
+dat.test = dat[index, ]
+
+mod1.train = glm(main.disorder ~ age + I(age^2) + education + IQ +
+                   log(beta),
+           family=binomial(),data=dat.train)
+
+# accuracy
+predprob = predict(mod1.train, newdata = dat.test, type = "response")
+mean(dat.test$main.disorder == round(predprob))
+
+roccurve <- roc(dat.test$main.disorder ~ predprob) 
+plot(roccurve,col="red")
+auc(roccurve)
+```
+
+2. 10-folf cross-validation for accuracy
+
+```{r}
+set.seed(2019)
+#Randomly shuffle the data
+yourData<-dat[sample(nrow(dat)),]
+
+#Create 10 equally size folds
+folds <- cut(seq(1,nrow(yourData)),breaks=10,labels=FALSE)
+acc = rep(0, 10)
+
+#Perform 10 fold cross validation
+for(i in 1:10){
+    #Segement your data by fold using the which() function 
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- yourData[testIndexes, ]
+    trainData <- yourData[-testIndexes, ]
+    #Use the test and train data partitions however you desire...
+    mod1.train = glm(main.disorder ~ age + I(age^2) + education + IQ +
+                   log(beta),
+           family=binomial(),data=trainData)
+
+    # accuracy
+    predprob = predict(mod1.train, newdata = testData, type = "response")
+    acc[i] = mean(testData$main.disorder == round(predprob))
+}
+mean(acc)
+```
+
+
+
+

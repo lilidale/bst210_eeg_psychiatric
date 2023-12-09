@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="analysis_files/libs/quarto-html/quarto.js"></script>
+<script src="analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="analysis_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="analysis_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.3     ✔ readr     2.1.4
+✔ forcats   1.0.0     ✔ stringr   1.5.0
+✔ ggplot2   3.4.3     ✔ tibble    3.2.1
+✔ lubridate 1.9.2     ✔ tidyr     1.3.0
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forcats)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'GGally':
+  method from   
+  +.gg   ggplot2</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(cowplot)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'cowplot'
+
+The following object is masked from 'package:lubridate':
+
+    stamp</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(glmnet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: Matrix
+
+Attaching package: 'Matrix'
+
+The following objects are masked from 'package:tidyr':
+
+    expand, pack, unpack
+
+Loaded glmnet 4.1-8</code></pre>
+</div>
+</div>
+<p>Data Loading:</p>
+<p>mood: only mood disorder vs healthy control ab: only absolute power</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>eeg <span class="ot">=</span> <span class="fu">read.csv</span>(<span class="st">"EEG.machinelearing_data_BRMH.csv"</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>mood <span class="ot">=</span> eeg <span class="sc">%&gt;%</span> <span class="fu">filter</span>(main.disorder <span class="sc">==</span> <span class="st">"Healthy control"</span> <span class="sc">|</span> main.disorder <span class="sc">==</span> <span class="st">"Mood disorder"</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>ab <span class="ot">=</span> eeg[, <span class="dv">1</span><span class="sc">:</span><span class="dv">122</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>ab <span class="ot">=</span> eeg[, <span class="dv">1</span><span class="sc">:</span><span class="dv">122</span>]</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="fu">colnames</span>(ab)[<span class="dv">9</span><span class="sc">:</span><span class="dv">122</span>] <span class="ot">=</span> <span class="fu">str_split</span>(<span class="fu">colnames</span>(ab)[<span class="dv">9</span><span class="sc">:</span><span class="dv">122</span>], <span class="st">"</span><span class="sc">\\</span><span class="st">."</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">lapply</span>(<span class="cf">function</span>(x){ <span class="fu">paste0</span>(x[<span class="dv">3</span>], <span class="st">"_"</span>, x[<span class="dv">5</span>])</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  }) <span class="sc">%&gt;%</span> unlist</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>ab.long <span class="ot">=</span> ab <span class="sc">%&gt;%</span> <span class="fu">pivot_longer</span>(<span class="dv">9</span><span class="sc">:</span><span class="dv">122</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">separate</span>(name, <span class="fu">c</span>(<span class="st">"band"</span>, <span class="st">"chanel"</span>), <span class="st">"_"</span>) <span class="sc">%&gt;%</span> </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(main.disorder <span class="sc">==</span> <span class="st">"Healthy control"</span> <span class="sc">|</span> main.disorder <span class="sc">==</span> <span class="st">"Mood disorder"</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>mood.ab <span class="ot">=</span> ab <span class="sc">%&gt;%</span> <span class="fu">filter</span>(main.disorder <span class="sc">==</span> <span class="st">"Healthy control"</span> <span class="sc">|</span> main.disorder <span class="sc">==</span> <span class="st">"Mood disorder"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>How many missing data?</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="dv">122-8</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 114</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dv">15</span><span class="sc">/</span><span class="dv">945</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.01587302</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dv">13</span><span class="sc">/</span><span class="dv">945</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.01375661</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>ab <span class="sc">%&gt;%</span> head</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  no. sex age   eeg.date education  IQ      main.disorder    specific.disorder
+1   1   M  57  2012.8.30        NA  NA Addictive disorder Alcohol use disorder
+2   2   M  37   2012.9.6         6 120 Addictive disorder Alcohol use disorder
+3   3   M  32  2012.9.10        16 113 Addictive disorder Alcohol use disorder
+4   4   M  35  2012.10.8        18 126 Addictive disorder Alcohol use disorder
+5   5   M  36 2012.10.18        16 112 Addictive disorder Alcohol use disorder
+6   6   F  24 2012.11.21        14 105 Addictive disorder Alcohol use disorder
+  delta_FP1 delta_FP2 delta_F7 delta_F3 delta_Fz delta_F4  delta_F8  delta_T3
+1  35.99856  21.71738 21.51828 26.82505 26.61152 25.73265 16.563408 29.891368
+2  13.42512  11.00292 11.94252 15.27222 14.15157 12.45603  8.436832  9.975238
+3  29.94178  27.54468 17.15016 23.60896 27.08781 13.54124 16.523963 12.775574
+4  21.49623  21.84683 17.36432 13.83370 14.10095 13.10094 14.613650  8.063191
+5  37.77567  33.60768 21.86556 21.77141 22.85454 21.45638 15.969042  9.434306
+6  13.48210  14.09586 12.85463 11.72748 13.12892 11.62714 14.978119  6.899770
+   delta_C3 delta_Cz  delta_C4  delta_T4  delta_T5  delta_P3  delta_Pz
+1 22.402246 22.58218 23.987650 14.741769 16.271815 18.376257 16.447620
+2 14.834740 10.95056 12.742712  6.230904 11.238420 14.767063 15.653628
+3 21.686306 18.36767 20.293571 11.946956 11.063130 20.956259 18.946034
+4 11.015078 11.63956  8.816415  8.456443 17.676429  9.959183  9.877650
+5 15.244523 17.04198 17.712593 18.278851 15.449687  9.239752 13.154119
+6  9.751346 14.14117 16.559389  5.996280  9.839662  9.548665  9.048235
+   delta_P4  delta_T6  delta_O1  delta_O2 theta_FP1 theta_FP2  theta_F7
+1 16.409822 11.777727 18.278916 17.243432 17.718246 16.192495 14.915559
+2 13.290791  8.538482 14.740076  9.326202 11.768909  8.725535  9.201389
+3 16.965524 11.242449 11.812897  9.385839 23.301782 19.889236 12.670295
+4 10.098478 10.612230 12.782252  8.645818  9.459105  8.346581  7.146427
+5 34.529365 19.541089 10.434374 17.268496  8.672135  8.461829  6.009767
+6  5.135972  4.727858  4.121274  2.898511  6.749387  6.722903  5.720900
+   theta_F3  theta_Fz  theta_F4  theta_F8  theta_T3  theta_C3  theta_Cz
+1 21.651286 22.795144 19.884898 11.974900 12.784247 16.841048 19.056095
+2 13.089875 12.350967  9.711676  5.298104  6.413413 10.777291  7.328993
+3 19.468802 20.835590 11.413157 10.572396 10.271465 18.276336 16.211813
+4  9.349048  9.989677  8.294223  5.129463  4.673410  7.257602  8.497067
+5  9.227666 10.145943  9.028607  5.611287  3.445666  7.178336  9.036934
+6  7.506812  6.647552  6.819534  5.963032  3.144850  6.302088  9.918818
+   theta_C4 theta_T4  theta_T5  theta_P3  theta_Pz  theta_P4 theta_T6  theta_O1
+1 15.268866 8.689380 11.256468 14.464448 13.276731 13.247274 7.718878 13.961118
+2  8.045258 3.074612  7.016035 10.370045 11.234658  8.603103 3.876353  7.077455
+3 14.983080 8.125448  9.542317 16.244603 16.182878 12.399733 7.837362  8.878944
+4  6.502563 4.070429  7.520922  6.264068  7.076124  6.898702 4.748773  4.494487
+5  8.208113 7.910589  6.669741  5.962465  8.594797 12.815735 7.936189  5.883821
+6 10.067829 3.390082  5.840645  6.243190  5.821151  3.701964 2.664233  2.907766
+   theta_O2 alpha_FP1 alpha_FP2 alpha_F7 alpha_F3 alpha_Fz alpha_F4 alpha_F8
+1 11.405713  43.48325  43.94958 35.77817 47.10130 51.52660 48.72805 32.36072
+2  6.583032  33.85236  27.91436 22.45427 33.01243 35.58211 31.22238 16.65349
+3  6.531020  35.58217  30.71567 19.61706 26.86517 28.83515 15.02282 15.63812
+4  3.975982  30.55172  28.20329 21.78264 32.64697 35.56693 28.34762 15.63358
+5  8.240325  25.12900  26.13357 16.95678 28.17056 32.36557 30.29677 20.18960
+6  2.024313  30.40761  29.02670 24.05190 30.63248 29.32059 26.95812 20.02638
+  alpha_T3 alpha_C3 alpha_Cz alpha_C4  alpha_T4  alpha_T5 alpha_P3 alpha_Pz
+1 28.36147 40.24603 47.06782 40.05572 20.957916 28.588244 35.26529 36.38941
+2 12.46664 30.76529 29.19249 26.28956  6.004026 25.688996 54.89030 83.81328
+3 11.63764 22.20803 23.10092 18.16567  7.730639 15.830628 36.92054 34.65718
+4 14.05483 24.96821 40.82623 26.82304  9.404190 13.101205 24.36661 38.65028
+5 10.92650 24.10784 32.10185 29.17981 18.439383 12.730090 27.01870 37.29742
+6 11.66275 23.60117 27.66266 18.39042  9.756009  9.692335 13.98146 15.46618
+   alpha_P4  alpha_T6  alpha_O1  alpha_O2  beta_FP1  beta_FP2   beta_F7
+1 36.377014 23.947412 63.124539 43.075163 11.202471 11.111987 10.299296
+2 60.357041 22.509232 49.292022 24.536612 30.423142 23.859927 25.380145
+3 35.788096 17.832920 25.149313 13.953632 13.799929 10.315396  7.140844
+4 47.675544 19.049614 18.029549 21.373615  6.429691  6.212037  5.412940
+5 40.647268 28.738378 43.317768 43.193521 10.147936 11.017907  7.944765
+6  9.194538  3.400747  8.616029  5.312236 12.002400 12.032555 11.246489
+    beta_F3   beta_Fz   beta_F4   beta_F8   beta_T3   beta_C3   beta_Cz
+1 13.703910 14.099317 12.645652  8.126729  9.509544 12.266766 12.204114
+2 34.776727 31.968025 26.931780 14.097111 17.907382 31.858213 21.331871
+3  9.976556 11.258897  6.397807  6.746350  7.411332 10.880288  8.637915
+4  6.222455  6.633003  6.528162  4.940311  4.271065  5.833371  6.296104
+5 12.575301 13.942326 14.348928 10.554364  6.512581 13.163129 15.086980
+6 12.436642 11.732462 11.100535  9.531387 35.771832 11.391121 12.082291
+    beta_C4   beta_T4   beta_T5   beta_P3   beta_Pz   beta_P4   beta_T6
+1 10.551489  7.091466  8.879488 10.987060  9.480509  9.469261  7.637561
+2 25.091939  7.128827 23.088577 40.930709 42.781735 38.216524 15.053848
+3 10.571053  6.323799  6.319551 11.637712 10.482763  9.545934  6.512094
+4  5.223149  4.388610  6.038855  6.627343  6.615975  7.843094  4.967585
+5 17.314899 13.988437 12.870996 22.170484 26.564533 31.021917 22.979801
+6 12.923656 12.715501  8.691843  8.248895  8.091869  6.308941  4.308995
+    beta_O1   beta_O2 highbeta_FP1 highbeta_FP2 highbeta_F7 highbeta_F3
+1 12.606753  9.605356     1.189787     1.166220    1.198108    1.481230
+2 26.651776 21.774445     2.405026     1.849430    2.372416    3.155157
+3  7.492413  6.654689     1.558157     1.407458    0.992478    1.241508
+4  4.788194  5.117776     0.926411     0.870030    0.928028    0.850426
+5 38.897346 36.625118     0.896239     1.021943    0.806290    1.183247
+6  5.299451  3.730786     1.744066     1.588027    2.218594    1.843152
+  highbeta_Fz highbeta_F4 highbeta_F8 highbeta_T3 highbeta_C3 highbeta_Cz
+1    1.560487    1.323756    0.964089    1.253971    1.278288    1.371919
+2    2.583577    2.107680    1.378047    1.604894    2.650001    1.588493
+3    1.425030    0.808989    1.155967    1.224323    1.435606    0.953629
+4    0.841779    0.940850    0.938025    0.745763    0.852525    0.809658
+5    1.212426    1.267657    1.350487    0.559549    1.052782    1.229032
+6    1.488372    1.470932    1.295651   17.021807    2.065526    1.642863
+  highbeta_C4 highbeta_T4 highbeta_T5 highbeta_P3 highbeta_Pz highbeta_P4
+1    1.176258    0.922873    0.983981    1.152177    1.001313    0.997850
+2    2.179330    0.789076    1.865844    2.588811    2.480160    2.680374
+3    1.526889    1.137196    0.958131    1.524170    1.260052    1.122192
+4    0.718317    0.989655    1.109326    0.855438    0.804441    0.922403
+5    1.640949    1.884799    1.120534    0.955513    1.197774    1.919250
+6    2.097867    1.911416    2.119634    1.443718    1.373591    1.080985
+  highbeta_T6 highbeta_O1 highbeta_O2 gamma_FP1 gamma_FP2 gamma_F7 gamma_F3
+1    0.865271    1.133111    1.154114  1.735131  1.615208 1.757096 1.955974
+2    1.726309    1.830967    3.144451  1.465631  1.128447 1.220812 1.637785
+3    1.056033    1.155725    1.148117  2.126071  1.607127 1.203713 1.409034
+4    1.093755    0.935997    0.963721  1.329558  1.359216 1.432442 1.213077
+5    1.712678    1.554052    2.259298  1.125398  1.229485 0.967711 1.277354
+6    1.043672    1.035090    0.846013  2.571690  2.189019 3.166255 2.084768
+  gamma_Fz gamma_F4 gamma_F8  gamma_T3 gamma_C3 gamma_Cz gamma_C4 gamma_T4
+1 2.049559 1.768655 1.458645  1.814427 1.779594 1.993727 1.765493 1.464281
+2 1.550037 1.224922 0.822460  0.835750 1.228602 0.903383 0.931967 0.437117
+3 1.544254 0.953546 1.445609  1.621734 1.578108 1.096713 1.691152 1.505663
+4 1.217155 1.598629 2.095289  1.292708 1.225820 1.115040 1.122776 2.128138
+5 1.267477 1.425068 2.121440  0.679018 1.109727 1.193191 2.320845 3.562820
+6 2.002375 1.893443 1.800819 12.482283 2.260339 2.159111 2.780522 5.419482
+  gamma_T5 gamma_P3 gamma_Pz gamma_P4 gamma_T6 gamma_O1 gamma_O2
+1 1.501948 1.707307 1.553448 1.552658 1.388662 1.592717 1.806598
+2 0.930843 1.234874 1.373268 1.411808 1.140695 1.118041 3.162143
+3 1.133891 1.661768 1.403429 1.349457 1.270525 1.408471 1.454618
+4 1.648217 1.147666 1.049152 1.131654 1.415856 1.391048 1.527403
+5 1.441662 1.018804 1.274009 2.350806 2.307730 2.129431 3.766860
+6 2.587215 1.694676 1.748525 1.527331 1.664579 1.266546 1.133410</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>ab[, <span class="dv">1</span><span class="sc">:</span><span class="dv">8</span>] <span class="sc">%&gt;%</span> summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      no.          sex                 age          eeg.date        
+ Min.   :  1   Length:945         Min.   :18.00   Length:945        
+ 1st Qu.:237   Class :character   1st Qu.:21.73   Class :character  
+ Median :473   Mode  :character   Median :26.15   Mode  :character  
+ Mean   :473                      Mean   :30.59                     
+ 3rd Qu.:709                      3rd Qu.:35.45                     
+ Max.   :945                      Max.   :71.88                     
+                                                                    
+   education           IQ        main.disorder      specific.disorder 
+ Min.   : 0.00   Min.   : 49.0   Length:945         Length:945        
+ 1st Qu.:12.00   1st Qu.: 91.0   Class :character   Class :character  
+ Median :13.00   Median :102.0   Mode  :character   Mode  :character  
+ Mean   :13.44   Mean   :101.6                                        
+ 3rd Qu.:16.00   3rd Qu.:114.0                                        
+ Max.   :20.00   Max.   :145.0                                        
+ NA's   :15      NA's   :13                                           </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(<span class="fu">as.factor</span>(main.disorder) <span class="sc">~</span> <span class="fu">is.na</span>(education), </span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">family=</span>binomial, <span class="at">data=</span>mood.ab) <span class="sc">%&gt;%</span> summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = as.factor(main.disorder) ~ is.na(education), family = binomial, 
+    data = mood.ab)
+
+Coefficients:
+                     Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)            1.0433     0.1206   8.652   &lt;2e-16 ***
+is.na(education)TRUE  -1.0433     1.0072  -1.036      0.3    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 416.11  on 360  degrees of freedom
+Residual deviance: 415.08  on 359  degrees of freedom
+AIC: 419.08
+
+Number of Fisher Scoring iterations: 4</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(<span class="fu">as.factor</span>(main.disorder) <span class="sc">~</span> <span class="fu">is.na</span>(IQ), </span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">family=</span>binomial, <span class="at">data=</span>mood.ab) <span class="sc">%&gt;%</span> summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = as.factor(main.disorder) ~ is.na(IQ), family = binomial, 
+    data = mood.ab)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     1.0221     0.1196   8.543   &lt;2e-16 ***
+is.na(IQ)TRUE  13.5440   624.1938   0.022    0.983    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 416.11  on 360  degrees of freedom
+Residual deviance: 414.89  on 359  degrees of freedom
+AIC: 418.89
+
+Number of Fisher Scoring iterations: 13</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(<span class="fu">as.factor</span>(sex) <span class="sc">~</span> <span class="fu">is.na</span>(IQ), </span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    <span class="at">family=</span>binomial, <span class="at">data=</span>mood.ab) <span class="sc">%&gt;%</span> summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = as.factor(sex) ~ is.na(IQ), family = binomial, 
+    data = mood.ab)
+
+Coefficients:
+              Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)     0.3546     0.1072   3.308 0.000941 ***
+is.na(IQ)TRUE -14.9207   624.1938  -0.024 0.980929    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 490.10  on 360  degrees of freedom
+Residual deviance: 486.57  on 359  degrees of freedom
+AIC: 490.57
+
+Number of Fisher Scoring iterations: 13</code></pre>
+</div>
+</div>
+<p>Modeling:</p>
+<p>Let’s do some lasso/ridge/en first. PCA will be later.</p>
+<p>Logistic regression:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glm</span>(<span class="fu">as.factor</span>(sex) <span class="sc">~</span> <span class="fu">is.na</span>(IQ), <span class="at">family=</span>binomial, <span class="at">data=</span>mood.ab)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:  glm(formula = as.factor(sex) ~ is.na(IQ), family = binomial, 
+    data = mood.ab)
+
+Coefficients:
+  (Intercept)  is.na(IQ)TRUE  
+       0.3546       -14.9207  
+
+Degrees of Freedom: 360 Total (i.e. Null);  359 Residual
+Null Deviance:      490.1 
+Residual Deviance: 486.6    AIC: 490.6</code></pre>
+</div>
+</div>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
